@@ -10,10 +10,12 @@ import type { User } from '@supabase/supabase-js';
 
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { CURRENT_TERMS_VERSION, RESERVED_USERNAMES } from './auth.constants'
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
+import { normalizePhone } from '../common/utils/phone';
 
 
 @Injectable()
@@ -30,6 +32,7 @@ export class AuthService {
 
     const email = dto.email.trim().toLowerCase();
     const username = dto.username.toLowerCase();
+    this.assertUsernameAllowed(username);
     await this.assertUnique(email, dto.phone, username);
 
     const { data, error } = await this.supabase.createAuthClient().auth.signUp({
@@ -52,6 +55,7 @@ export class AuthService {
         email,
         phone: dto.phone,
         username,
+        ...this.consentFields(dto.accountType),
       });
 
     if (profileError) {
@@ -271,6 +275,7 @@ export class AuthService {
 
     const email = user.email.toLowerCase();
     const username = dto.username.toLowerCase();
+    this.assertUsernameAllowed(username);
     await this.assertUnique(email, dto.phone, username);
 
     const { error } = await this.supabase.admin.from('profiles').insert({
@@ -280,6 +285,7 @@ export class AuthService {
       email,
       phone: dto.phone,
       username,
+      ...this.consentFields(dto.accountType),
     });
 
     if (error) {
@@ -294,6 +300,35 @@ export class AuthService {
     return { message: 'Profile completed successfully' };
   }
 
+  async usernameAvailable(username: string) {
+    const value = username.toLocaleLowerCase();
+    if (RESERVED_USERNAMES.has(value)) return { available: false };
+
+    const { count, error } =await this.supabase.admin
+      .from('profiles')
+      .select('id', { count: 'exact', head: true})
+      .eq('username', value);
+
+    if (error) {
+      throw new InternalServerErrorException('Unable to check username');
+    }
+    return { available: !count };
+  }
+
+  private assertUsernameAllowed(username: string) {
+    if (RESERVED_USERNAMES.has(username)) {
+      throw new ConflictException('Username is already taken');
+    }
+  }
+
+  private consentFields(accountType: string) {
+    return {
+      account_type: accountType,
+      terms_version: CURRENT_TERMS_VERSION,
+      terms_accepted_at: new Date().toISOString(),
+    };
+  }
+
   /** Turns an email, phone, or username into the account's email. */
   private async resolveEmail(identifier: string): Promise<string> {
     const value = identifier.trim();
@@ -301,7 +336,7 @@ export class AuthService {
 
     const isPhone = /^\+?[\d\s-]{7,}$/.test(value);
     const column = isPhone ? 'phone' : 'username';
-    const lookup = isPhone ? value.replace(/[\s-]/g, '') : value.toLowerCase();
+    const lookup = isPhone ? String(normalizePhone(value)).replace(/[\s-]/g, '') : value.toLowerCase();
 
     const { data } = await this.supabase.admin
       .from('profiles')
