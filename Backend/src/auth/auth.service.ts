@@ -211,6 +211,7 @@ export class AuthService {
       throw new BadRequestException(message);
     }
 
+    await this.supabase.admin.auth.admin.signOut(accessToken, 'global');
     const data = await res.json();
 
     return {
