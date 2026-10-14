@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { SupabaseModule } from './supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfileModule } from './profiles/profile.module';
+import { IssuesModule } from './issues/issues.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProfileModule } from './profiles/profile.module';
     SupabaseModule,
     AuthModule,
     ProfileModule,
+    IssuesModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
