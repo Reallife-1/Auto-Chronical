@@ -5,6 +5,7 @@ import {
   Headers,
   HttpCode,
   Post,
+  Query,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UsernameAvailableQueryDto } from './dto/username-available.dto';
 import { SupabaseAuthGuard } from './supabase-auth.guard';
 
 const MINUTE = 60_000;
@@ -48,6 +50,12 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: MINUTE } })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
+  }
+
+  @Get('username-available')
+  @Throttle({ default: { limit: 20, ttl: MINUTE } })
+  usernameAvailable(@Query() query: UsernameAvailableQueryDto) {
+    return this.auth.usernameAvailable(query.username);
   }
 
   @Post('refresh')

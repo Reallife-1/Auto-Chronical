@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -14,9 +15,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
-    transform: true,
+    transform: true, //converts query strings to numbers for pagination
   }));
 
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors({
     origin: config.get('FRONTEND_URL') || '*',
     credentials: true,

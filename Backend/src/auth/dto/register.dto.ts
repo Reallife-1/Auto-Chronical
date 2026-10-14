@@ -1,11 +1,18 @@
 import {
     IsEmail,
+    IsIn,
     IsNotEmpty,
     IsString,
     MinLength,
     MaxLength,
     Matches,
+    Equals,
+    IsBoolean,
 } from 'class-validator';
+import { ACCOUNT_TYPES } from '../auth.constants';
+import type { AccountType } from '../auth.constants';
+import { Transform } from 'class-transformer';
+import { normalizePhone } from '../../common/utils/phone';
 
 export class RegisterDto {
     @IsString()
@@ -22,7 +29,7 @@ export class RegisterDto {
     @IsNotEmpty()
     email: string;
 
-    @IsString()
+    @Transform(({ value }) => normalizePhone(value))
     @Matches(/^\+[1-9]\d{7,14}$/,{
         message: 'Phone number must be in international format, e.g.  +2348000000000',
     })
@@ -42,4 +49,13 @@ export class RegisterDto {
     @IsString()
     @IsNotEmpty()
     confirmPassword: string;
+
+    @IsIn([...ACCOUNT_TYPES], {
+        message: 'accountType must be either personal or fleet',
+    })
+    accountType: AccountType;
+
+    @IsBoolean()
+    @Equals(true, { message: 'You must accept the terms and privacy policy' })
+    acceptedTerms: boolean;
 }
