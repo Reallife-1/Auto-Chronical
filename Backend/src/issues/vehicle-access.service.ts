@@ -23,7 +23,7 @@ export class VehicleAccessService {
       .from('vehicles')
       .select('id')
       .eq('id', vehicleId)
-      .eq('owner_id', userId)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (error) {
