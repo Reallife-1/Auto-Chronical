@@ -6,6 +6,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfileModule } from './profiles/profile.module';
 import { IssuesModule } from './issues/issues.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { IssuesModule } from './issues/issues.module';
     AuthModule,
     ProfileModule,
     IssuesModule,
+    VehiclesModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
