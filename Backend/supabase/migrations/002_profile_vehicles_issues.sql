@@ -2,6 +2,7 @@
 -- Run after 001. Applied to the dev/staging project on 2026-10-15.
 begin;
 
+-- profiles: columns the new auth/profile code uses
 alter table public.profiles
   add column if not exists account_type text not null default 'personal'
     check (account_type in ('personal','fleet')),
@@ -13,6 +14,7 @@ alter table public.profiles
   add column if not exists distance_unit text not null default 'km'
     check (distance_unit in ('km','mi'));
 
+-- vehicles
 create table public.vehicles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
@@ -43,6 +45,7 @@ create table public.vehicles (
 );
 create index vehicles_user_idx on public.vehicles (user_id, is_archived, created_at desc);
 
+-- issues
 create table public.issues (
   id uuid primary key default gen_random_uuid(),
   vehicle_id uuid not null references public.vehicles(id) on delete cascade,
@@ -68,6 +71,7 @@ create table public.issues (
 );
 create index issues_vehicle_idx on public.issues (vehicle_id, status, reported_at desc);
 
+-- issue_status_history
 create table public.issue_status_history (
   id uuid primary key default gen_random_uuid(),
   issue_id uuid not null references public.issues(id) on delete cascade,
@@ -80,6 +84,7 @@ create table public.issue_status_history (
 );
 create index issue_history_idx on public.issue_status_history (issue_id, changed_at);
 
+-- RLS (the API uses the service role and bypasses these; they protect direct access)
 alter table public.vehicles enable row level security;
 alter table public.issues enable row level security;
 alter table public.issue_status_history enable row level security;
