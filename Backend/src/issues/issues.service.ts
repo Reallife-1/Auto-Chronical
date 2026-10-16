@@ -6,6 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 
 import { paginate } from '../common/pagination/paginate';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -19,7 +20,7 @@ import {
   toHistoryResponse,
   toIssueResponse,
 } from './issues.mapper';
-import { VehicleAccessService } from './vehicle-access.service';
+import { VehicleAccessService } from '../common/vehicle-access/vehicle-access.service';
 
 @Injectable()
 export class IssuesService {
@@ -30,28 +31,78 @@ export class IssuesService {
     private readonly access: VehicleAccessService,
   ) {}
 
-  async create(userId: string, vehicleId: string, dto: CreateIssueDto) {
+  async create(
+    userId: string,
+    vehicleId: string,
+    dto: CreateIssueDto,
+    idempotencyKey: string,
+  ) {
     await this.access.assertCanAccess(userId, vehicleId);
+
+    if (!idempotencyKey || !/^[A-Za-z0-9._:-]{1,128}$/.test(idempotencyKey)) {
+      throw new BadRequestException('Idempotency-Key must be 1-128 valid characters');
+    }
 
     if (dto.occurredAt && new Date(dto.occurredAt).getTime() > Date.now()) {
       throw new BadRequestException('occurredAt cannot be in the future');
     }
 
+    const requestHash = createHash('sha256')
+      .update(
+        JSON.stringify({
+          category: dto.category,
+          severity: dto.severity,
+          timing: dto.timing,
+          description: dto.description?.trim() || null,
+          odometerReading: dto.odometerReading ?? null,
+          occurredAt: dto.occurredAt ? new Date(dto.occurredAt).toISOString() : null,
+        }),
+      )
+      .digest('hex');
+
+    const issueInsert = {
+      vehicle_id: vehicleId,
+      reported_by: userId,
+      category: dto.category,
+      severity: dto.severity,
+      timing: dto.timing,
+      description: dto.description?.trim() || null,
+      odometer_reading: dto.odometerReading ?? null,
+      occurred_at: dto.occurredAt ?? null,
+      status: 'reported',
+      idempotency_key: idempotencyKey,
+      request_hash: requestHash,
+    };
+
     const { data, error } = await this.supabase.admin
       .from('issues')
-      .insert({
-        vehicle_id: vehicleId,
-        reported_by: userId,
-        category: dto.category,
-        severity: dto.severity,
-        timing: dto.timing,
-        description: dto.description?.trim() || null,
-        odometer_reading: dto.odometerReading ?? null,
-        occurred_at: dto.occurredAt ?? null,
-        status: 'reported',
-      })
+      .insert(issueInsert)
       .select(ISSUE_COLUMNS)
       .single();
+
+    if (error?.code === '23505') {
+      const { data: existing, error: lookupError } = await this.supabase.admin
+        .from('issues')
+        .select(`${ISSUE_COLUMNS}, request_hash`)
+        .eq('reported_by', userId)
+        .eq('vehicle_id', vehicleId)
+        .eq('idempotency_key', idempotencyKey)
+        .maybeSingle();
+
+      if (lookupError) {
+        throw new InternalServerErrorException('Unable to check issue retry');
+      }
+
+      if (existing) {
+        if (existing.request_hash !== requestHash) {
+          throw new ConflictException(
+            'Idempotency-Key was already used for a different issue request',
+          );
+        }
+
+        return toIssueResponse(existing as IssueRow);
+      }
+    }
 
     if (error || !data) {
       throw new InternalServerErrorException('Unable to report issue');
