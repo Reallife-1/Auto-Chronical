@@ -18,8 +18,8 @@ type ProfileRow = {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
-  username: string;
+  phone: string | null;
+  username: string | null;
   account_type: string;
   preferred_currency: string | null;
   locale: string | null;

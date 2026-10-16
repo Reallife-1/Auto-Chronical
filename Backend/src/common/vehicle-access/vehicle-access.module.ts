@@ -3,6 +3,6 @@ import { VehicleAccessService } from './vehicle-access.service';
 
 @Module({
   providers: [VehicleAccessService],
-
+  exports: [VehicleAccessService],
 })
 export class VehicleAccessModule {}

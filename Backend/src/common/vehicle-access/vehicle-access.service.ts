@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -6,29 +7,64 @@ import {
 
 import { SupabaseService } from '../../supabase/supabase.service';
 
-/**
- * The ONE place that decides "can this user work with this vehicle?".
- *
- * Right now (Personal MVP) only the owner can. When Fleet Mode arrives, change
- * this method to also allow fleet owners/managers (and, for reports, assigned
- * drivers). Nothing else in the issues module needs to change.
-
- */
+/** Centralizes personal ownership and fleet-member access checks for vehicles. */
 @Injectable()
 export class VehicleAccessService {
   constructor(private readonly supabase: SupabaseService) {}
 
   async listAccessibleVehicles(userId: string) {
-    const { data, error } = await this.supabase.admin
-      .from('vehicles')
-      .select('id, name, plate_number')
-      .eq('owner_id', userId);
+    const { data: memberships, error: membershipError } = await this.supabase.admin
+      .from('fleet_members')
+      .select('fleet_id')
+      .eq('user_id', userId);
 
-    if (error) {
+    if (membershipError) {
       throw new InternalServerErrorException('Unable to load accessible vehicles');
     }
 
-    return (data ?? []) as {
+    const { data: ownedFleets, error: ownedFleetError } = await this.supabase.admin
+      .from('fleets')
+      .select('id')
+      .eq('owner_id', userId);
+
+    if (ownedFleetError) {
+      throw new InternalServerErrorException('Unable to load accessible vehicles');
+    }
+
+    const fleetIds = [
+      ...new Set([
+        ...(memberships ?? []).map((membership) => membership.fleet_id),
+        ...(ownedFleets ?? []).map((fleet) => fleet.id),
+      ]),
+    ];
+    const { data: ownedVehicles, error: ownedError } = await this.supabase.admin
+      .from('vehicles')
+      .select('id, name, plate_number, user_id, fleet_id')
+      .eq('user_id', userId);
+
+    if (ownedError) {
+      throw new InternalServerErrorException('Unable to load accessible vehicles');
+    }
+
+    const { data: fleetVehicles, error: fleetError } = fleetIds.length
+      ? await this.supabase.admin
+          .from('vehicles')
+          .select('id, name, plate_number, user_id, fleet_id')
+          .in('fleet_id', fleetIds)
+      : { data: [], error: null };
+
+    if (fleetError) {
+      throw new InternalServerErrorException('Unable to load accessible vehicles');
+    }
+
+    const byId = new Map(
+      [...(ownedVehicles ?? []), ...(fleetVehicles ?? [])].map((vehicle) => [
+        vehicle.id,
+        vehicle,
+      ]),
+    );
+
+    return [...byId.values()] as {
       id: string;
       name: string | null;
       plate_number: string | null;
@@ -36,10 +72,14 @@ export class VehicleAccessService {
   }
 
   async assertCanAccess(userId: string, vehicleId: string): Promise<void> {
-    const { data, error } = await this.supabase.admin
-      .from('vehicles')
-      .select('id')
-      .eq('id', vehicleId)
+    const vehicle = await this.getVehicle(vehicleId);
+    if (vehicle.user_id === userId) return;
+    if (!vehicle.fleet_id) throw new NotFoundException('Vehicle not found');
+
+    const { data: member, error } = await this.supabase.admin
+      .from('fleet_members')
+      .select('user_id')
+      .eq('fleet_id', vehicle.fleet_id)
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -47,9 +87,64 @@ export class VehicleAccessService {
       throw new InternalServerErrorException('Unable to verify vehicle access');
     }
 
-    // 404, not 403, so we don't reveal that someone else's vehicle exists.
+    const { data: fleet, error: fleetError } = await this.supabase.admin
+      .from('fleets')
+      .select('id')
+      .eq('id', vehicle.fleet_id)
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    if (fleetError) {
+      throw new InternalServerErrorException('Unable to verify vehicle access');
+    }
+
+    if (!member && !fleet) {
+      throw new NotFoundException('Vehicle not found');
+    }
+  }
+
+  async assertCanManageVehicle(userId: string, vehicleId: string): Promise<void> {
+    const vehicle = await this.getVehicle(vehicleId);
+    if (!vehicle.fleet_id) {
+      if (vehicle.user_id !== userId) {
+        throw new NotFoundException('Vehicle not found');
+      }
+      return;
+    }
+
+    const { data: fleet, error: fleetError } = await this.supabase.admin
+      .from('fleets')
+      .select('id')
+      .eq('id', vehicle.fleet_id)
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    if (fleetError) {
+      throw new InternalServerErrorException('Unable to verify vehicle access');
+    }
+    if (fleet) return;
+    throw new ForbiddenException('Fleet owner access is required');
+  }
+
+  private async getVehicle(vehicleId: string): Promise<{
+    id: string;
+    user_id: string;
+    fleet_id: string | null;
+  }> {
+    const { data, error } = await this.supabase.admin
+      .from('vehicles')
+      .select('id, user_id, fleet_id')
+      .eq('id', vehicleId)
+      .maybeSingle();
+
+    if (error) {
+      throw new InternalServerErrorException('Unable to verify vehicle access');
+    }
+
     if (!data) {
       throw new NotFoundException('Vehicle not found');
     }
+
+    return data;
   }
 }

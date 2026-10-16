@@ -8,5 +8,6 @@ import { ExchangeRateService } from './exchange-rate.service';
     imports: [VehicleAccessModule],
     controllers: [ExpensesController],
     providers: [ExpensesService, ExchangeRateService],
+    exports: [ExpensesService],
 })
 export class ExpensesModule {}

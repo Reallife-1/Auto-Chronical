@@ -49,7 +49,11 @@ export class ExpensesService {
     private readonly exchangeRates: ExchangeRateService,
   ) {}
 
-  async monthly(userId: string, query: MonthlyExpensesQueryDto) {
+  async monthly(
+    userId: string,
+    query: MonthlyExpensesQueryDto,
+    vehicleScope?: string[],
+  ) {
     const { year, month } = query;
     const trendLength = query.months ?? 6;
     const currency = (await this.preferredCurrency(userId)) ?? DEFAULT_CURRENCY;
@@ -60,7 +64,13 @@ export class ExpensesService {
     const rangeEnd = firstOfMonth(next.getUTCFullYear(), next.getUTCMonth() + 1); // exclusive
     const monthStart = firstOfMonth(year, month);
 
-    const vehicles = await this.access.listAccessibleVehicles(userId);
+    const accessibleVehicles = await this.access.listAccessibleVehicles(userId);
+    const scopedIds =
+      vehicleScope === undefined ? undefined : new Set(vehicleScope);
+    const vehicles =
+      scopedIds === undefined
+        ? accessibleVehicles
+        : accessibleVehicles.filter((vehicle) => scopedIds.has(vehicle.id));
     const repairs =
       vehicles.length === 0
         ? []
@@ -246,4 +256,3 @@ export class ExpensesService {
     return all;
   }
 }
-
