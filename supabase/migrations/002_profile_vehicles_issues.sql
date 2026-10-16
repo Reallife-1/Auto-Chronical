@@ -64,7 +64,7 @@ create table public.issues (
   occurred_at timestamptz,
   status text not null default 'reported'
     check (status in ('reported','being_checked','being_fixed','fixed')),
-  source_driver_report_id uuid unique,  -- add the foreign key when driver_reports exists
+  source_driver_report_id uuid unique,
   reported_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

@@ -52,4 +52,4 @@ export const ALLOWED_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
 };
 
 export const ISSUE_COLUMNS =
-  'id, vehicle_id, reported_by, category, severity, timing, description, odometer_reading, occurred_at, status, source_driver_report_id, reported_at, created_at, updated_at';
+  'id, vehicle_id, fleet_id, reported_by, category, severity, timing, description, odometer_reading, occurred_at, status, source_driver_report_id, reported_at, created_at, updated_at';
