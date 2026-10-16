@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -27,8 +28,9 @@ export class IssuesController {
     @CurrentUser() user: User,
     @Param('vehicleId', ParseUUIDPipe) vehicleId: string,
     @Body() dto: CreateIssueDto,
+    @Headers('idempotency-key') idempotencyKey: string,
   ) {
-    return this.issues.create(user.id, vehicleId, dto);
+    return this.issues.create(user.id, vehicleId, dto, idempotencyKey);
   }
 
   @Get('vehicles/:vehicleId/issues')

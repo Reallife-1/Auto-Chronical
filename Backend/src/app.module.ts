@@ -6,6 +6,9 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfileModule } from './profiles/profile.module';
 import { IssuesModule } from './issues/issues.module';
+import { RepairsModule } from './repairs/repairs.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { HealthController } from './health/health.controller';
 import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
@@ -24,9 +27,11 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     AuthModule,
     ProfileModule,
     IssuesModule,
+    RepairsModule,
+    ExpensesModule,
     VehiclesModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

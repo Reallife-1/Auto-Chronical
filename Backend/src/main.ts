@@ -24,6 +24,10 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.getHttpAdapter().getInstance().get('/health', (_request, response) => {
+    response.status(200).json({ status: 'ok' });
+  });
+
   await app.listen(config.get('PORT') ?? 4000);
 
   console.log(`Auto-Chronicle backend server is running on port ${config.get('PORT') ?? 4000}`);
