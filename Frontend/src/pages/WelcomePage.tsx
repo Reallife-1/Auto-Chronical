@@ -32,7 +32,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} className="welcome-page">
       <header style={styles.header}>
         <div style={styles.brand}>
           <span style={styles.logo}>Λ</span>
@@ -56,7 +56,7 @@ export default function WelcomePage() {
       </section>
 
       <section style={styles.vehicleSection}>
-        <div style={styles.dashboardPreview}>
+        <div style={styles.dashboardPreview} className="welcome-dashboard-grid">
           <div style={{ ...styles.dashboardCard, ...styles.healthCard }}>
             <p style={styles.cardLabel}>Vehicle Health</p>
 
@@ -139,7 +139,7 @@ export default function WelcomePage() {
           </div>
 
           <div style={{ ...styles.dashboardCard, ...styles.fundCard }}>
-            <div style={styles.fundIcon}>♧</div>
+            <div style={styles.fundIcon}>🚨</div>
 
             <div style={styles.fundContent}>
               <p style={styles.cardLabel}>Emergency Fund</p>
@@ -156,19 +156,28 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      <section style={styles.features}>
-        {features.map((feature) => (
-          <div key={feature.label} style={styles.feature}>
-            <div style={styles.featureIcon}>{feature.icon}</div>
-            <span>{feature.label}</span>
+      <section style={styles.features} className="welcome-features">
+        {features.map((feature, index) => (
+          <div key={feature.label} style={styles.featureWrapper}>
+            <div style={styles.feature}>
+              <div style={styles.featureIcon}>{feature.icon}</div>
+              <span>{feature.label}</span>
+            </div>
+            {index < features.length - 1 && (
+              <div
+                style={styles.featureConnector}
+                className="welcome-feature-connector"
+                aria-hidden="true"
+              />
+            )}
           </div>
         ))}
       </section>
 
-      <section style={styles.actions}>
+      <section style={styles.actions} className="welcome-actions">
         <button
           style={styles.primaryButton}
-          onClick={() => navigate('/register')}
+          onClick={() => navigate('/create-account')}
         >
           Get started <span>→</span>
         </button>
@@ -338,17 +347,21 @@ const styles: Record<string, React.CSSProperties> = {
 
   feature: {
     flex: '1 1 80px',
+    minWidth: '0',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '10px',
     color: '#aab5b8',
     fontSize: '13px',
+    position: 'relative',
+    zIndex: '1',
   },
 
   featureIcon: {
     width: '58px',
     height: '58px',
+    flexShrink: '0',
     display: 'grid',
     placeItems: 'center',
     borderRadius: '17px',
@@ -356,6 +369,27 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #28564d',
     color: '#45d1a3',
     fontSize: '25px',
+    boxSizing: 'border-box',
+    position: 'relative',
+    zIndex: '2',
+  },
+
+  featureWrapper: {
+    flex: '1 1 0',
+    minWidth: '0',
+    display: 'flex',
+    alignItems: 'flex-start',
+    position: 'relative',
+  },
+
+  featureConnector: {
+    height: '2px',
+    background: '#39494b',
+    top: '29px',
+    left: 'calc(50% + 37px)',
+    right: 'calc(-50% + 37px)',
+    zIndex: '0',
+    position: 'absolute',
   },
 
   actions: {

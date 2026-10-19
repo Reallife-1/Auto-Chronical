@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest, getAccessToken } from '../services/api';
 
@@ -33,7 +33,7 @@ export default function CompleteProfilePage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
 
@@ -62,10 +62,12 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#fbfaf6] px-5 py-10 text-[#18352f]">
-      <section className="w-full max-w-xl space-y-6 rounded-2xl border border-[#deded8] bg-white p-8 shadow-sm">
+    <main className="auth-shell bg-[#fbfaf6] text-[#18352f]">
+      <section className="auth-card max-w-xl">
         <div>
-          <h1 className="text-3xl font-semibold">Complete your profile</h1>
+          <h1 className="text-2xl font-semibold sm:text-3xl">
+            Complete your profile
+          </h1>
           <p className="mt-2 text-sm text-[#71807c]">
             A few details are needed to finish setting up your account.
           </p>
