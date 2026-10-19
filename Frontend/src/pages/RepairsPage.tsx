@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type SubmitEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CurrencyCodes } from 'validator/lib/isISO4217';
 import { apiRequest, getAccessToken, getApiUrl } from '../services/api';
@@ -45,7 +45,7 @@ export default function RepairsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError('');
@@ -159,7 +159,7 @@ export default function RepairsPage() {
   }
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} className="repairs-page">
       <div style={styles.container}>
         <button
           type="button"

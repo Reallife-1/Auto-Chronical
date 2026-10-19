@@ -71,9 +71,9 @@ export default function AuthCallbackPage() {
   }, [navigate]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#fbfaf6] px-5 py-10 text-[#18352f]">
-      <section className="w-full max-w-md space-y-4 rounded-2xl border border-[#deded8] bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold">Finishing sign-in</h1>
+    <main className="auth-shell bg-[#fbfaf6] text-[#18352f]">
+      <section className="auth-card max-w-md space-y-4">
+        <h1 className="text-xl font-semibold sm:text-2xl">Finishing sign-in</h1>
         {error ? (
           <>
             <p role="alert" className="text-sm text-red-700">

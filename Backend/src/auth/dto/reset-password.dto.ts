@@ -11,4 +11,10 @@ export class ResetPasswordDto {
   @MinLength(8)
   @MaxLength(20)
   password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(20)
+  confirmPassword: string;
 }

@@ -14,6 +14,7 @@ import { DriverReportsModule } from './driver-reports/driver-reports.module';
 import { FleetModule } from './fleet/fleet.module';
 import { CarFundModule } from './car-fund/car-fund.module';
 import { EmailRemindersModule } from './email-reminders/email-reminders.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { EmailRemindersModule } from './email-reminders/email-reminders.module';
     FleetModule,
     CarFundModule,
     EmailRemindersModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

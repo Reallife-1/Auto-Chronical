@@ -166,10 +166,7 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto, accessToken: string) {
-    const confirmPassword = (dto as ResetPasswordDto & { confirmPassword?: string })
-      .confirmPassword ?? '';
-
-    if (dto.password !== confirmPassword) {
+    if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException('Passwords do not match.');
     }
 
