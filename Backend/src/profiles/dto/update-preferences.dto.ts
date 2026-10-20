@@ -16,12 +16,19 @@ export class UpdatePreferencesDto {
     @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
     @IsISO4217CurrencyCode({ message: 'currency must be a valid ISO 4217 code, e.g. NGN' })
     currency?: string;
-
+    
     //Language tag
     @IsOptional()
-    @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
-    @Matches(/^[a-z]{2}(-[A-Z]{2})?$/,{
-        message: 'locale must look like en or en-NG' ,
+    @Transform(({ value }) => {
+     if (typeof value !== 'string') return value;
+  
+      const parts = value.trim().split('-');
+      return parts
+       .map((part, index) => (index === 0 ? part.toLowerCase() : part.toUpperCase()))
+       .join('-');
+    })
+    @Matches(/^[a-z]{2}(-[A-Z]{2})?$/, {
+       message: 'locale must look like en or en-NG',
     })
     locale?: string;
 
