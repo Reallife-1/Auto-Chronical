@@ -23,7 +23,7 @@ Mobile first app for tracking a car's repair history and building a savings habi
 ## Running locally
 
 1. Configure `Backend/.env` with `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Set `FRONTEND_URL` for fleet invitation links; optional email delivery settings are described below.
-2. Set `VITE_API_BASE_URL=http://localhost:4000/api` in `Frontend/.env` (or use the URL for your running API).
+2. Copy `Frontend/.env.example` to `Frontend/.env` and set the API URL and Supabase project URL/publishable key. Do not expose the service-role key in the frontend.
 3. Start the API from `Backend` with `npm run start:dev`.
 4. Start the client from `Frontend` with `npm run dev`.
 
@@ -67,3 +67,4 @@ See [FRONTEND_TODO.md](./FRONTEND_TODO.md) for the remaining page work and accep
 - **Service reminder email** (example): “Hello Ada, This is a friendly reminder that Corolla is due for service on 2026-10-20. Booking a service appointment can help you stay ahead of maintenance and keep your vehicle in good condition. You can review the vehicle and update its service date in Auto-Chronicle once the service is complete. Take care, The Auto-Chronicle team.”
 - **Car Fund email** (example): “Hello Ada, This is your weekly Car Fund reminder. You planned to set aside NGN 5,000.00 toward your goal of NGN 500,000.00. Your current target date is 2027-10-16. When you have made a contribution outside the app, you can record it in Car Fund to keep your progress up to date. Auto-Chronicle does not collect, hold, or transfer this money; this reminder does not make a payment. Every step toward your goal counts. The Auto-Chronicle team.”
 - Apply database migrations from the repository-root `/supabase/migrations` directory in filename order: `001_profiles.sql`, `002_profile_vehicles_issues.sql`, then timestamped migrations. Do not edit/re-run migrations already applied to a shared database; check the Supabase migration history first and apply only pending migrations. The Car Fund/reminder schema and RPCs are in `20261016000003_car_fund_and_email_reminders.sql`; the persistent notifications table and policies are in `20261019000000_persistent_notifications.sql`.
+- Profile photos use the public `profile-avatars` Storage bucket, restricted to JPEG, PNG, and WebP files up to 5 MB. The bucket and user-folder upload policy, as well as the `profiles.avatar_url` column, are created by `20261020000000_profile_avatars.sql`.

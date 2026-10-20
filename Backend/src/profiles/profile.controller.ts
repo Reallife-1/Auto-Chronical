@@ -29,13 +29,21 @@ export class ProfileController {
     return this.profile.get(user);
   }
 
+  @Get('statistics')
+  getStatistics(@CurrentUser() user: User) {
+    return this.profile.getStatistics(user);
+  }
+
   @Patch()
   update(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
     return this.profile.update(user.id, dto);
   }
 
   @Patch('preferences')
-  updatePreferences(@CurrentUser() user: User, @Body() dto: UpdatePreferencesDto) {
+  updatePreferences(
+    @CurrentUser() user: User,
+    @Body() dto: UpdatePreferencesDto,
+  ) {
     return this.profile.updatePreferences(user.id, dto);
   }
 
@@ -57,7 +65,11 @@ export class ProfileController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   changePassword(
     @CurrentUser() user: User,
-    @Body() { currentPassword, ...dto }: ChangePasswordDto & { currentPassword: string },
+    @Body()
+    {
+      currentPassword,
+      ...dto
+    }: ChangePasswordDto & { currentPassword: string },
     @Headers('authorization') authorization?: string,
   ) {
     return this.profile.changePassword(user, bearerToken(authorization), {

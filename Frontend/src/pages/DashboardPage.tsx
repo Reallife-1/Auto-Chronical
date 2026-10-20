@@ -1,14 +1,34 @@
 import axios from 'axios';
-import { Bell } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Bell,
+  CarFront,
+  ChevronDown,
+  ChevronRight,
+  ClipboardList,
+  CreditCard,
+  DollarSign,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  Target,
+  UserRound,
+  Wrench,
+} from 'lucide-react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import AppPageLayout from '../components/AppPageLayout';
 import { api } from '../services/api';
 
-/* -------------------------------------------------------------------------- */
 /* Types */
-/* -------------------------------------------------------------------------- */
 
 interface Fleet {
   id: string;
@@ -119,9 +139,7 @@ interface ApiErrorResponse {
   message?: string | string[];
 }
 
-/* -------------------------------------------------------------------------- */
 /* Helpers */
-/* -------------------------------------------------------------------------- */
 
 function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
@@ -216,18 +234,18 @@ function getPriorityLabel(priority: NotificationPriority): string {
   }
 }
 
-function getNotificationIcon(type: NotificationType): string {
+function getNotificationIcon(type: NotificationType): ReactNode {
   switch (type) {
     case 'service_due':
-      return '🛠️';
+      return <Wrench aria-hidden="true" className="h-5 w-5" />;
     case 'insurance_expiry':
-      return '🛡️';
+      return <ShieldCheck aria-hidden="true" className="h-5 w-5" />;
     case 'car_fund_contribution':
-      return '💰';
+      return <DollarSign aria-hidden="true" className="h-5 w-5" />;
     case 'car_fund_goal':
-      return '🎯';
+      return <Target aria-hidden="true" className="h-5 w-5" />;
     default:
-      return '🔔';
+      return <Bell aria-hidden="true" className="h-5 w-5" />;
   }
 }
 
@@ -237,6 +255,8 @@ export default function DashboardPage() {
   const [greeting, setGreeting] = useState(() => getGreeting());
 
   const [userName, setUserName] = useState('');
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   const [fleets, setFleets] = useState<Fleet[]>([]);
   const [selectedFleetId, setSelectedFleetId] = useState('');
@@ -317,6 +337,10 @@ export default function DashboardPage() {
           `${firstName} ${lastName}`.trim();
 
         setUserName(typeof fullName === 'string' ? fullName.trim() : '');
+
+        const email = profile?.email ?? payload?.email ?? '';
+
+        setUserEmail(typeof email === 'string' ? email : '');
       } catch {
         /*
          * The greeting still works if the endpoint is unavailable.
@@ -710,7 +734,10 @@ disabled:opacity-50"
                         </div>
                       ) : notifications.length === 0 ? (
                         <div className="p-8 text-center">
-                          <div className="text-3xl">🔔</div>
+                          <Bell
+                            aria-hidden="true"
+                            className="mx-auto h-8 w-8 text-slate-400"
+                          />
 
                           <p className="mt-3 font-medium text-slate-800">
                             You're all caught up
@@ -728,13 +755,9 @@ disabled:opacity-50"
                             onClick={() =>
                               handleNotificationClick(notification)
                             }
-                            className="flex w-full gap-3 border-b border-slate-100 px-4 py-4
-text-left transition hover:bg-slate-50"
+                            className="flex w-full gap-3 border-b border-slate-100 px-4 py-4 text-left transition hover:bg-slate-50"
                           >
-                            <span
-                              className="flex h-10 w-10 shrink-0 items-center justify-center
-rounded-xl bg-slate-100 text-lg"
-                            >
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg">
                               {getNotificationIcon(notification.type)}
                             </span>
 
@@ -745,8 +768,7 @@ rounded-xl bg-slate-100 text-lg"
                                 </span>
 
                                 <span
-                                  className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-
-semibold ${
+                                  className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${
                                     notification.priority === 'urgent'
                                       ? 'bg-red-100 text-red-700'
                                       : notification.priority === 'high'
@@ -776,6 +798,88 @@ semibold ${
                         {notificationTotal} reminder
                         {notificationTotal === 1 ? '' : 's'} available.
                       </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Account menu */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Open account menu"
+                aria-expanded={accountMenuOpen}
+                onClick={() => setAccountMenuOpen((current) => !current)}
+                className="flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-teal-800">
+                  <UserRound size={18} aria-hidden="true" />
+                </span>
+
+                <span className="hidden max-w-28 truncate text-sm font-medium sm:block">
+                  {userName || 'Account'}
+                </span>
+
+                <ChevronDown
+                  size={16}
+                  aria-hidden="true"
+                  className="hidden sm:block"
+                />
+              </button>
+
+              {accountMenuOpen && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close account menu"
+                    className="fixed inset-0 z-30 cursor-default"
+                    onClick={() => setAccountMenuOpen(false)}
+                  />
+
+                  <div className="absolute right-0 z-40 mt-3 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                    <div className="border-b border-slate-100 px-4 py-4">
+                      <p className="truncate font-semibold text-slate-900">
+                        {userName || 'Your account'}
+                      </p>
+
+                      {userEmail && (
+                        <p className="mt-1 truncate text-sm text-slate-500">
+                          {userEmail}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="p-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <UserRound size={18} aria-hidden="true" />
+                        View Profile
+                      </Link>
+
+                      <Link
+                        to="/settings"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <Settings size={18} aria-hidden="true" />
+                        Settings
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          navigate('/settings');
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <LogOut size={18} aria-hidden="true" />
+                        Account and security
+                      </button>
                     </div>
                   </div>
                 </>
@@ -830,7 +934,7 @@ teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
               value={vehiclesLoading ? '…' : totalVehicles.toLocaleString()}
 
               description="Active vehicles"
-              icon="🚘"
+              icon={<CarFront aria-hidden="true" className="h-5 w-5" />}
               accent="teal"
               onClick={() => navigate('/vehicles')}
             />
@@ -849,7 +953,7 @@ teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
                   ? 'Fleet vehicles requiring attention'
                   : 'Available with fleet access'
               }
-              icon="⚠️"
+              icon={<AlertTriangle aria-hidden="true" className="h-5 w-5" />}
               accent="amber"
               onClick={() => navigate('/fleet')}
             />
@@ -868,7 +972,7 @@ teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
                     : '—'
               }
               description="Selected fleet · current month"
-              icon="💳"
+              icon={<CreditCard aria-hidden="true" className="h-5 w-5" />}
               accent="blue"
               onClick={() => navigate('/expenses')}
             />
@@ -883,7 +987,7 @@ teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
                     : '—'
               }
               description="Reports awaiting review"
-              icon="📋"
+              icon={<ClipboardList aria-hidden="true" className="h-5 w-5" />}
 
               accent="purple"
               onClick={() => navigate('/reports')}
@@ -979,7 +1083,10 @@ bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-
                 className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-
 slate-50 px-6 py-10 text-center"
               >
-                <div className="text-4xl">🚘</div>
+                <CarFront
+                  aria-hidden="true"
+                  className="mx-auto h-10 w-10 text-teal-700"
+                />
 
                 <h3 className="mt-3 font-semibold text-slate-900">
                   No vehicles yet
@@ -1014,7 +1121,10 @@ teal-500"
                         className="flex h-11 w-11 shrink-0 items-center justify-center
 rounded-xl bg-slate-100 text-xl"
                       >
-                        🚗
+                        <CarFront
+                          aria-hidden="true"
+                          className="h-6 w-6 text-teal-700"
+                        />
                       </div>
 
                       <span
@@ -1071,7 +1181,11 @@ text-xs text-slate-500"
                   to="/vehicles"
                   className="text-sm font-semibold text-teal-700 hover:text-teal-900"
                 >
-                  View all {totalVehicles} vehicles →
+                  View all {totalVehicles} vehicles{' '}
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="ml-1 inline h-4 w-4"
+                  />
                 </Link>
               </div>
             )}
@@ -1096,7 +1210,10 @@ text-xs text-slate-500"
                 className="flex h-11 w-11 items-center justify-center rounded-xl bg-
 white/10 text-xl"
               >
-                💰
+                <DollarSign
+                  aria-hidden="true"
+                  className="h-5 w-5 text-teal-300"
+                />
               </span>
             </div>
 
@@ -1190,7 +1307,11 @@ bg-teal-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-t
 rounded-xl bg-teal-500 px-4 py-3 text-sm font-semibold text-slate-950 transition
 hover:bg-teal-400"
                 >
-                  Manage Car Fund →
+                  Manage Car Fund{' '}
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="ml-1 inline h-4 w-4"
+                  />
                 </Link>
               </>
             )}
@@ -1214,7 +1335,8 @@ hover:bg-teal-400"
               to="/vehicles"
               className="text-sm font-semibold text-teal-700 hover:text-teal-900"
             >
-              View vehicles →
+              View vehicles{' '}
+              <ArrowRight aria-hidden="true" className="ml-1 inline h-4 w-4" />
             </Link>
           </div>
 
@@ -1247,7 +1369,10 @@ text-left transition hover:border-teal-300 hover:bg-teal-50/30"
                     className="flex h-10 w-10 shrink-0 items-center justify-center
 rounded-xl bg-amber-50 text-lg"
                   >
-                    🔧
+                    <Wrench
+                      aria-hidden="true"
+                      className="h-5 w-5 text-amber-700"
+                    />
                   </span>
 
                   <span className="min-w-0">
@@ -1284,7 +1409,11 @@ rounded-xl bg-amber-50 text-lg"
                 to="/reports"
                 className="text-sm font-semibold text-teal-700 hover:text-teal-900"
               >
-                View reports →
+                View reports{' '}
+                <ArrowRight
+                  aria-hidden="true"
+                  className="ml-1 inline h-4 w-4"
+                />
               </Link>
             </div>
 
@@ -1345,7 +1474,7 @@ interface SummaryCardProps {
 
   value: string;
   description: string;
-  icon: string;
+  icon: ReactNode;
   accent: 'teal' | 'amber' | 'blue' | 'purple';
   onClick: () => void;
 }
@@ -1393,8 +1522,8 @@ focus:outline-none focus:ring-2 focus:ring-teal-500"
       <div className="mt-4 flex items-center justify-between gap-2">
         <p className="text-xs leading-5 text-slate-500">{description}</p>
 
-        <span className="text-sm text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-700">
-          →
+        <span className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-700">
+          <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </span>
       </div>
     </button>

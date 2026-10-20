@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import { useState, type SubmitEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest, storeAuthSession } from '../services/api';
@@ -46,7 +47,8 @@ export default function LoginPage() {
     <main className="auth-shell bg-[#fbfaf6] text-[#18352f]">
       <section className="auth-card max-w-md text-[#18352f]">
         <Link to="/" className="text-sm text-[#36745e] hover:underline">
-          ← Auto Chronicle
+          <ArrowLeft aria-hidden="true" className="mr-1 inline h-4 w-4" />
+          Auto Chronicle
         </Link>
         <div>
           <h1 className="text-2xl font-semibold sm:text-3xl">Welcome back</h1>

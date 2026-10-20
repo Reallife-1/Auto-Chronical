@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { useEffect, useState, type SubmitEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AppPageLayout from '../components/AppPageLayout';
@@ -133,7 +134,7 @@ export default function IssueReportPage() {
           to={vehicleId ? '/vehicles' : '/dashboard'}
           className="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-950"
         >
-          <span aria-hidden="true">←</span>{' '}
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           {vehicleId ? 'Back to vehicles' : 'Back to dashboard'}
         </Link>
 
@@ -292,7 +293,8 @@ export default function IssueReportPage() {
           </label>
 
           <p className="text-center text-xs text-gray-500">
-            ✓ We’ll save this to your car’s story.
+            <Check aria-hidden="true" className="mr-1 inline h-4 w-4" />
+            We’ll save this to your car’s story.
           </p>
           <button
             type="submit"
@@ -300,7 +302,9 @@ export default function IssueReportPage() {
             className="app-primary-button w-full"
           >
             {submitting ? 'Sending report...' : 'Save update'}
-            {!submitting && <span aria-hidden="true"> →</span>}
+            {!submitting && (
+              <ArrowRight aria-hidden="true" className="ml-1 inline h-4 w-4" />
+            )}
           </button>
         </form>
       </div>

@@ -1,3 +1,4 @@
+import { ArrowLeft, Check } from 'lucide-react';
 import { useRef, useState, type SubmitEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CurrencyCodes } from 'validator/lib/isISO4217';
@@ -167,7 +168,7 @@ export default function RepairsPage() {
           style={styles.backButton}
           aria-label="Go back"
         >
-          ←
+          <ArrowLeft aria-hidden="true" className="h-5 w-5" />
         </button>
 
         <p style={styles.brand}>AUTO CHRONICLE</p>
@@ -316,7 +317,14 @@ export default function RepairsPage() {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Saving...' : "Save to car's story ✓"}
+            {loading ? (
+              'Saving...'
+            ) : (
+              <>
+                Save to car&apos;s story
+                <Check aria-hidden="true" className="ml-2 inline h-4 w-4" />
+              </>
+            )}
           </button>
         </form>
       </div>

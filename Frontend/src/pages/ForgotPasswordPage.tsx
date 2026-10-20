@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import { useState, type SubmitEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../services/api';
@@ -40,7 +41,8 @@ export default function ForgotPasswordPage() {
     <main className="auth-shell bg-[#fbfaf6] text-[#18352f]">
       <section className="auth-card max-w-md">
         <Link to="/login" className="auth-link text-sm">
-          ← Back to sign in
+          <ArrowLeft aria-hidden="true" className="mr-1 inline h-4 w-4" />
+          Back to sign in
         </Link>
         <div>
           <h1 className="text-2xl font-semibold sm:text-3xl">

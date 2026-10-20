@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ArrowRight } from 'lucide-react';
 import { useCallback, useEffect, useState, type SubmitEvent } from 'react';
 import AppPageLayout from '../components/AppPageLayout';
 import { api } from '../services/api';
@@ -376,7 +377,12 @@ export default function CarFundPage() {
               className="app-primary-button sm:col-span-2"
             >
               {savingGoal ? 'Saving goal...' : 'Save fund goal'}
-              {!savingGoal && <span aria-hidden="true"> →</span>}
+              {!savingGoal && (
+                <ArrowRight
+                  aria-hidden="true"
+                  className="ml-1 inline h-4 w-4"
+                />
+              )}
             </button>
           </form>
           {summary?.suggestedContributions && (

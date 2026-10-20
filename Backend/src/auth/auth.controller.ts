@@ -4,6 +4,7 @@ import {
   Get,
   Headers,
   HttpCode,
+  Patch,
   Post,
   Query,
   UnauthorizedException,
@@ -20,6 +21,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from '../profiles/dto/update-profile.dto';
 import { UsernameAvailableQueryDto } from './dto/username-available.dto';
 import { SupabaseAuthGuard } from './supabase-auth.guard';
 
@@ -106,6 +108,15 @@ export class AuthController {
   @UseGuards(SupabaseAuthGuard)
   me(@CurrentUser() user: User) {
     return this.auth.getMe(user);
+  }
+
+  @Patch('me')
+  @UseGuards(SupabaseAuthGuard)
+  updateMe(
+    @CurrentUser() user: User,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.auth.updateProfile(user, dto);
   }
 
   @Post('complete-profile')
