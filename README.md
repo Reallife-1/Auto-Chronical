@@ -1,5 +1,5 @@
-# Auto-Chronical
-Alts Final Project
+# Auto Chronicle
+AltSchool Capstone Project
 
 Mobile first app for tracking a car's repair history and building a savings habit for upkeep. AltSchool Capstone project.
 
@@ -51,7 +51,6 @@ Protected page URLs:
 | Car Fund | `/car-fund` | Goal setup/progress and recent contribution history connected; history pagination and deletion remain |
 | Accept fleet invitation | `/fleet-invitations/accept?token=...` | Invitation session, profile form, and acceptance request connected; verify Supabase redirect configuration |
 
-See [FRONTEND_TODO.md](./FRONTEND_TODO.md) for the remaining page work and acceptance checklist.
 
 ## API Notes
 - Health checks: `GET /health` and `GET /api/health` return `{ "status": "ok" }`.
