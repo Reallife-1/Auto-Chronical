@@ -23,6 +23,28 @@ interface ProfileResponse {
   preferences: Preferences;
 }
 
+const currencyDisplayNames = new Intl.DisplayNames('en', {
+  type: 'currency',
+});
+
+const timezoneDisplayNames = new Intl.DisplayNames('en', {
+  type: 'timeZone',
+});
+
+const currencyOptions = Intl.supportedValuesOf('currency')
+  .sort()
+  .map((currency) => ({
+    value: currency,
+    label: `${currencyDisplayNames.of(currency) ?? currency} (${currency})`,
+  }));
+
+const timezoneOptions = Intl.supportedValuesOf('timeZone')
+  .sort()
+  .map((timezone) => ({
+    value: timezone,
+    label: `${timezoneDisplayNames.of(timezone) ?? timezone} (${timezone})`,
+  }));
+
 export default function SettingsPage() {
   const [preferences, setPreferences] = useState<Preferences>({
     currency: null,
@@ -57,10 +79,7 @@ export default function SettingsPage() {
     void loadPreferences();
   }, []);
 
-  function updatePreference(
-    field: keyof Preferences,
-    value: string,
-  ) {
+  function updatePreference(field: keyof Preferences, value: string) {
     setPreferences((current) => ({
       ...current,
       [field]: value,
@@ -70,9 +89,7 @@ export default function SettingsPage() {
     setSuccess('');
   }
 
-  async function savePreferences(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function savePreferences(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setSaving(true);
@@ -221,10 +238,11 @@ export default function SettingsPage() {
                     <option value="" disabled>
                       Select currency
                     </option>
-                    <option value="NGN">Nigerian Naira (NGN)</option>
-                    <option value="USD">US Dollar (USD)</option>
-                    <option value="GBP">British Pound (GBP)</option>
-                    <option value="EUR">Euro (EUR)</option>
+                    {currencyOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -274,16 +292,11 @@ export default function SettingsPage() {
                     <option value="" disabled>
                       Select time zone
                     </option>
-                    <option value="Africa/Lagos">
-                      Africa/Lagos (West Africa)
-                    </option>
-                    <option value="Europe/London">
-                      Europe/London
-                    </option>
-                    <option value="America/New_York">
-                      America/New_York
-                    </option>
-                    <option value="UTC">UTC</option>
+                    {timezoneOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
