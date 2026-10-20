@@ -10,6 +10,7 @@
     "format": "prettier --write \"index.html\" \"vite.config.ts\" \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "axios": "^1.12.2",
     "lucide-react": "^1.59.0",
     "react": "^19.2.0",

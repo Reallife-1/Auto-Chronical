@@ -1,3 +1,4 @@
+import { ArrowLeft, Check } from 'lucide-react';
 import { useEffect, useState, type SubmitEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../services/api';
@@ -125,7 +126,8 @@ export default function CreateAccountPage() {
         <aside className="auth-split-aside flex flex-col justify-between gap-8">
           <div>
             <Link to="/" className="text-sm text-[#b8e8d6] hover:text-white">
-              ← Auto Chronicle
+              <ArrowLeft aria-hidden="true" className="mr-1 inline h-4 w-4" />
+              Auto Chronicle
             </Link>
             <p className="mt-6 text-xs font-bold tracking-[0.25em] text-[#7ddfb8]">
               JOIN AUTO CHRONICLE
@@ -141,19 +143,19 @@ export default function CreateAccountPage() {
           <ul className="space-y-3 text-sm text-[#cce5dc]">
             <li className="flex gap-2">
               <span className="text-[#45d1a3]" aria-hidden>
-                ✓
+                <Check aria-hidden="true" className="h-4 w-4" />
               </span>
               International phone & unique username
             </li>
             <li className="flex gap-2">
               <span className="text-[#45d1a3]" aria-hidden>
-                ✓
+                <Check aria-hidden="true" className="h-4 w-4" />
               </span>
               Personal or fleet workspace
             </li>
             <li className="flex gap-2">
               <span className="text-[#45d1a3]" aria-hidden>
-                ✓
+                <Check aria-hidden="true" className="h-4 w-4" />
               </span>
               Email verification before first sign-in
             </li>
@@ -163,7 +165,8 @@ export default function CreateAccountPage() {
         <section className="space-y-6 p-6 sm:p-8">
           <div className="lg:hidden">
             <Link to="/" className="auth-link text-sm">
-              ← Auto Chronicle
+              <ArrowLeft aria-hidden="true" className="mr-1 inline h-4 w-4" />
+              Auto Chronicle
             </Link>
           </div>
 

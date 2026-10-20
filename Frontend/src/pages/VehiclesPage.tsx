@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { CarFront } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppPageLayout from '../components/AppPageLayout';
@@ -127,7 +128,10 @@ export default function VehiclesPage() {
               >
                 <div className="flex items-start gap-3">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-green-50 text-xl">
-                    🚘
+                    <CarFront
+                      aria-hidden="true"
+                      className="h-6 w-6 text-green-800"
+                    />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -185,7 +189,10 @@ export default function VehiclesPage() {
         ) : (
           <section className="rounded-2xl border border-dashed border-gray-800 bg-gray-900 px-5 py-12 text-center">
             <span className="text-3xl" aria-hidden="true">
-              🚘
+              <CarFront
+                aria-hidden="true"
+                className="mx-auto h-8 w-8 text-green-800"
+              />
             </span>
             <h2 className="mt-3 font-semibold">
               {archived ? 'No archived vehicles' : 'Your garage is ready'}

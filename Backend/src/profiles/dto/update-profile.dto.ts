@@ -3,6 +3,7 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  IsUrl,
   Matches,
   MaxLength,
   MinLength,
@@ -36,4 +37,12 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsIn([...ACCOUNT_TYPES], { message: 'accountType must be either personal or fleet' })
   accountType?: AccountType;
+
+  @IsOptional()
+  @IsUrl({
+    protocols: ['https'],
+    require_protocol: true,
+  })
+  @MaxLength(2048)
+  avatarUrl?: string;
 }

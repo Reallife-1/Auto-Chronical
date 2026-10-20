@@ -4,6 +4,7 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import AcceptInvitationPage from './pages/AcceptInvitationPage';
 import CarFundPage from './pages/CarFundPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
+import ProfilePage from './pages/ProfilePage';
 import CreateAccountPage from './pages/CreateAccountPage';
 import DashboardPage from './pages/DashboardPage';
 import ExpensesPage from './pages/ExpensesPage';
@@ -14,6 +15,7 @@ import LoginPage from './pages/LoginPage';
 import ReportsPage from './pages/ReportsPage';
 import RepairsPage from './pages/RepairsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import SettingsPage from './pages/SettingsPage';
 import VehiclesPage from './pages/VehiclesPage';
 import WelcomePage from './pages/WelcomePage';
 
@@ -35,6 +37,8 @@ function App() {
           element={<AcceptInvitationPage />}
         />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/vehicles" element={<VehiclesPage />} />
         <Route path="/reports" element={<ReportsPage />} />

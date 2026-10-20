@@ -1,4 +1,10 @@
-﻿import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+﻿import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { User } from '@supabase/supabase-js';
 
@@ -20,6 +26,7 @@ type ProfileRow = {
   email: string;
   phone: string | null;
   username: string | null;
+  avatar_url: string | null;
   account_type: string;
   preferred_currency: string | null;
   locale: string | null;
@@ -36,6 +43,7 @@ function toProfileResponse(row: ProfileRow) {
     email: row.email,
     phone: row.phone,
     username: row.username,
+    avatarUrl: row.avatar_url,
     accountType: row.account_type,
     preferences: {
       currency: row.preferred_currency,
@@ -66,7 +74,9 @@ export class ProfileService {
     }
 
     if (!data) {
-      throw new NotFoundException('Profile not found. Please complete your profile first.');
+      throw new NotFoundException(
+        'Profile not found. Please complete your profile first.',
+      );
     }
 
     const row = data as ProfileRow;
@@ -105,6 +115,9 @@ export class ProfileService {
     }
     if (dto.accountType !== undefined) {
       changes.account_type = dto.accountType;
+    }
+    if (dto.avatarUrl !== undefined) {
+      changes.avatar_url = dto.avatarUrl;
     }
     if (dto.username !== undefined) {
       const username = dto.username.toLowerCase();
@@ -176,9 +189,12 @@ export class ProfileService {
       'This account signs in with Google and has no password. Use "Forgot password" to set one.',
     );
 
-    const { error } = await this.supabase.admin.auth.admin.updateUserById(user.id, {
-      password: dto.newPassword,
-    });
+    const { error } = await this.supabase.admin.auth.admin.updateUserById(
+      user.id,
+      {
+        password: dto.newPassword,
+      },
+    );
 
     if (error) {
       throw new BadRequestException('Unable to update password');
@@ -198,7 +214,9 @@ export class ProfileService {
     const newEmail = dto.newEmail.trim().toLowerCase();
 
     if (newEmail === user.email?.toLowerCase()) {
-      throw new BadRequestException('New email must be different from the current email');
+      throw new BadRequestException(
+        'New email must be different from the current email',
+      );
     }
 
     const { count, error: lookupError } = await this.supabase.admin
@@ -250,7 +268,10 @@ export class ProfileService {
 
   /** Signs the user out of every device, including this one. */
   async revokeAllSessions(accessToken: string) {
-    const { error } = await this.supabase.admin.auth.admin.signOut(accessToken, 'global');
+    const { error } = await this.supabase.admin.auth.admin.signOut(
+      accessToken,
+      'global',
+    );
 
     if (error) {
       throw new BadRequestException('Unable to sign out of all devices');
@@ -265,8 +286,8 @@ export class ProfileService {
     password: string,
     googleOnlyMessage: string,
   ) {
-    const providers =
-      (user.app_metadata?.providers as string[] | undefined) ?? [user.app_metadata?.provider];
+    const providers = (user.app_metadata?.providers as
+      string[] | undefined) ?? [user.app_metadata?.provider];
 
     if (!user.email || !providers.includes('email')) {
       throw new BadRequestException(googleOnlyMessage);
@@ -292,21 +313,29 @@ export class ProfileService {
 
     if (error) {
       if (error.code === '23505') {
-        throw new ConflictException('Phone number or username is already in use');
+        throw new ConflictException(
+          'Phone number or username is already in use',
+        );
       }
 
       throw new InternalServerErrorException('Unable to update profile');
     }
 
     if (!data) {
-      throw new NotFoundException('Profile not found. Please complete your profile first.');
+      throw new NotFoundException(
+        'Profile not found. Please complete your profile first.',
+      );
     }
 
     return toProfileResponse(data as ProfileRow);
   }
 
   /** Same as sign-up uniqueness checks, but ignores the user's own row. */
-  private async assertUniqueExceptSelf(userId: string, phone?: string, username?: string) {
+  private async assertUniqueExceptSelf(
+    userId: string,
+    phone?: string,
+    username?: string,
+  ) {
     const taken = async (column: string, value: string) => {
       const { count, error } = await this.supabase.admin
         .from('profiles')
@@ -315,7 +344,9 @@ export class ProfileService {
         .neq('id', userId);
 
       if (error) {
-        throw new InternalServerErrorException('Unable to validate profile details');
+        throw new InternalServerErrorException(
+          'Unable to validate profile details',
+        );
       }
 
       return !!count;

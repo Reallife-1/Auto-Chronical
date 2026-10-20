@@ -8,6 +8,8 @@ const pageLinks = [
   { to: '/reports', label: 'Reports' },
   { to: '/car-fund', label: 'Car Fund' },
   { to: '/fleet', label: 'Fleet' },
+  { to: '/profile', label: 'Profile' },
+  { to: '/settings', label: 'Settings' },
 ];
 
 interface AppPageLayoutProps {
