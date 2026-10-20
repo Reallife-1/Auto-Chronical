@@ -101,6 +101,53 @@ export class ProfileService {
     return toProfileResponse(row);
   }
 
+  async getStatistics(user: User) {
+    const [activeVehicles, archivedVehicles, driverReports, resolvedIssues] =
+      await Promise.all([
+        this.supabase.admin
+          .from('vehicles')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_archived', false),
+        this.supabase.admin
+          .from('vehicles')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_archived', true),
+        this.supabase.admin
+          .from('driver_reports')
+          .select('id', { count: 'exact', head: true })
+          .eq('reported_by', user.id),
+        this.supabase.admin
+          .from('issues')
+          .select('id', { count: 'exact', head: true })
+          .eq('reported_by', user.id)
+          .eq('status', 'fixed'),
+      ]);
+
+    if (
+      activeVehicles.error ||
+      archivedVehicles.error ||
+      driverReports.error ||
+      resolvedIssues.error
+    ) {
+      throw new InternalServerErrorException(
+        'Unable to load profile statistics',
+      );
+    }
+
+    const activeVehicleCount = activeVehicles.count ?? 0;
+    const archivedVehicleCount = archivedVehicles.count ?? 0;
+
+    return {
+      activeVehicles: activeVehicleCount,
+      archivedVehicles: archivedVehicleCount,
+      totalVehicles: activeVehicleCount + archivedVehicleCount,
+      driverReports: driverReports.count ?? 0,
+      resolvedIssues: resolvedIssues.count ?? 0,
+    };
+  }
+
   async update(userId: string, dto: UpdateProfileDto) {
     const changes: Record<string, string> = {};
 

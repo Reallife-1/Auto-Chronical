@@ -26,7 +26,6 @@ interface UserProfile {
   phone: string | null;
   username: string | null;
   account_type?: string | null;
-  created_at?: string | null;
   avatar_url?: string | null;
 }
 interface ProfileUpdateResponse {
@@ -41,13 +40,12 @@ interface MeResponse {
   profileComplete: boolean;
   profile: UserProfile | null;
 }
-interface VehicleResponse {
-  data: unknown[];
-  meta?: { total?: number; totalPages?: number };
-}
-interface ReportResponse {
-  data: unknown[];
-  meta?: { total?: number; totalPages?: number };
+interface ProfileStatistics {
+  activeVehicles: number;
+  archivedVehicles: number;
+  totalVehicles: number;
+  driverReports: number;
+  resolvedIssues: number;
 }
 interface ProfileForm {
   firstName: string;
@@ -74,19 +72,6 @@ function getErrorMessage(error: unknown): string {
   }
   return 'Something went wrong. Please try again.';
 }
-function formatDate(value: string | null | undefined): string {
-  if (!value) {
-    return 'Not available';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Not available';
-  }
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
-}
 function getAccountType(value: string | null | undefined): string {
   if (!value) {
     return 'Account';
@@ -107,8 +92,8 @@ function getInitials(profile: UserProfile): string {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [vehicleCount, setVehicleCount] = useState<number | null>(null);
-  const [storyCount, setStoryCount] = useState<number | null>(null);
+  const [statistics, setStatistics] = useState<ProfileStatistics | null>(null);
+  const [statisticsError, setStatisticsError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -142,31 +127,15 @@ export default function ProfilePage() {
       const currentProfile = response.data.profile;
       setProfile(currentProfile);
       populateForm(currentProfile);
-      // Statistics are requested independently so one unavailable
-      //endpoint does not prevent the profile itself from loading.
-      const [vehiclesResult, reportsResult] = await Promise.allSettled([
-        api.get<VehicleResponse>('/vehicles', {
-          params: { page: 1, limit: 1, archived: false },
-        }),
-        api.get<ReportResponse>('/driver-reports', {
-          params: { page: 1, limit: 1 },
-        }),
-      ]);
-      if (vehiclesResult.status === 'fulfilled') {
-        setVehicleCount(
-          vehiclesResult.value.data.meta?.total ??
-            vehiclesResult.value.data.data.length,
+      setStatisticsError('');
+      try {
+        const statisticsResponse = await api.get<ProfileStatistics>(
+          '/profile/statistics',
         );
-      } else {
-        setVehicleCount(null);
-      }
-      if (reportsResult.status === 'fulfilled') {
-        setStoryCount(
-          reportsResult.value.data.meta?.total ??
-            reportsResult.value.data.data.length,
-        );
-      } else {
-        setStoryCount(null);
+        setStatistics(statisticsResponse.data);
+      } catch (statisticsLoadError) {
+        setStatistics(null);
+        setStatisticsError(getErrorMessage(statisticsLoadError));
       }
     } catch (loadError) {
       setError(getErrorMessage(loadError));
@@ -508,7 +477,7 @@ export default function ProfilePage() {
             {' '}
             <p className="text-2xl font-bold text-[#173c36] sm:text-3xl">
               {' '}
-              {vehicleCount === null ? '—' : vehicleCount}{' '}
+              {statistics === null ? '—' : statistics.activeVehicles}{' '}
             </p>{' '}
             <p className="mt-1 text-xs text-[#74847e] sm:text-sm">
               {' '}
@@ -522,25 +491,34 @@ export default function ProfilePage() {
             {' '}
             <p className="text-2xl font-bold text-[#173c36] sm:text-3xl">
               {' '}
-              {storyCount === null ? '—' : storyCount}{' '}
+              {statistics === null ? '—' : statistics.driverReports}{' '}
             </p>{' '}
             <p className="mt-1 text-xs text-[#74847e] sm:text-sm">
               {' '}
-              Story entries{' '}
+              Reports filed{' '}
             </p>{' '}
           </Link>
-          <div className="px-2 text-center">
-            {' '}
-            <p className="text-base font-bold text-[#173c36] sm:text-xl">
-              {' '}
-              {formatDate(profile.created_at ?? null)}{' '}
-            </p>{' '}
+          <div
+            className="px-2 text-center"
+            title={
+              statistics
+                ? `${statistics.totalVehicles} total vehicles, including ${statistics.archivedVehicles} archived`
+                : undefined
+            }
+          >
+            <p className="text-2xl font-bold text-[#173c36] sm:text-3xl">
+              {statistics === null ? '—' : statistics.resolvedIssues}
+            </p>
             <p className="mt-1 text-xs text-[#74847e] sm:text-sm">
-              {' '}
-              Member since{' '}
-            </p>{' '}
+              Issues resolved
+            </p>
           </div>{' '}
         </section>
+        {statisticsError && (
+          <p role="status" className="mx-4 mt-2 text-sm text-[#74847e] sm:mx-8">
+            Profile statistics are unavailable: {statisticsError}
+          </p>
+        )}
         {/* Personal information */}{' '}
         <section className="mt-8 px-4 sm:px-8">
           {' '}
