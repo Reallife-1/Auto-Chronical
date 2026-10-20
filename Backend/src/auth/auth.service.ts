@@ -10,13 +10,13 @@ import type { User } from '@supabase/supabase-js';
 
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CURRENT_TERMS_VERSION, RESERVED_USERNAMES } from './auth.constants'
+import { CURRENT_TERMS_VERSION, RESERVED_USERNAMES } from './auth.constants';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from '../profiles/dto/update-profile.dto';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { normalizePhone } from '../common/utils/phone';
-
 
 @Injectable()
 export class AuthService {
@@ -71,11 +71,12 @@ export class AuthService {
     }
 
     return {
-      message: 'Registration successful. Check your email to verify your account using the link provided.',
+      message:
+        'Registration successful. Check your email to verify your account using the link provided.',
     };
   }
 
- async login(dto: LoginDto) {
+  async login(dto: LoginDto) {
     const email = await this.resolveEmail(dto.identifier);
 
     const { data, error } = await this.supabase
@@ -84,7 +85,9 @@ export class AuthService {
 
     if (error || !data.session) {
       if (error?.code === 'email_not_confirmed') {
-        throw new ForbiddenException('Please verify your email before logging in');
+        throw new ForbiddenException(
+          'Please verify your email before logging in',
+        );
       }
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -97,7 +100,7 @@ export class AuthService {
     };
   }
 
-    /** Swaps a refresh token for a new access + refresh token pair. */
+  /** Swaps a refresh token for a new access + refresh token pair. */
   async refresh(refreshToken: string) {
     const { data, error } = await this.supabase
       .createAuthClient()
@@ -151,9 +154,13 @@ export class AuthService {
       throw new BadRequestException('Email is required.');
     }
 
-    const { error } = await this.supabase.createAuthClient().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: this.config.getOrThrow<string>('PASSWORD_RESET_REDIRECT_URL'),
-    });
+    const { error } = await this.supabase
+      .createAuthClient()
+      .auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: this.config.getOrThrow<string>(
+          'PASSWORD_RESET_REDIRECT_URL',
+        ),
+      });
 
     if (error) {
       throw new BadRequestException(error.message);
@@ -166,10 +173,7 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto, accessToken: string) {
-    const confirmPassword = (dto as ResetPasswordDto & { confirmPassword?: string })
-      .confirmPassword ?? '';
-
-    if (dto.password !== confirmPassword) {
+    if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException('Passwords do not match.');
     }
 
@@ -189,15 +193,18 @@ export class AuthService {
     // token. Call the GoTrue `/user` endpoint directly with that token instead
     // — it's the same request `updateUser` makes under the hood, and it accepts
     // a recovery access token on its own.
-    const res = await fetch(`${this.config.getOrThrow<string>('SUPABASE_URL')}/auth/v1/user`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: this.config.getOrThrow<string>('SUPABASE_PUBLISHABLE_KEY'),
-        Authorization: `Bearer ${accessToken}`,
+    const res = await fetch(
+      `${this.config.getOrThrow<string>('SUPABASE_URL')}/auth/v1/user`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: this.config.getOrThrow<string>('SUPABASE_PUBLISHABLE_KEY'),
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ password: dto.password }),
       },
-      body: JSON.stringify({ password: dto.password }),
-    });
+    );
 
     if (!res.ok) {
       let message = 'Unable to update password.';
@@ -221,13 +228,16 @@ export class AuthService {
   }
 
   async googleLogin() {
-    
-    const { data, error } = await this.supabase.createAuthClient().auth.signInWithOAuth({
-      provider: 'google',
-      options: { 
-        redirectTo: this.config.getOrThrow<string>('GOOGLE_AUTH_REDIRECT_URL'),
-      },
-    });
+    const { data, error } = await this.supabase
+      .createAuthClient()
+      .auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: this.config.getOrThrow<string>(
+            'GOOGLE_AUTH_REDIRECT_URL',
+          ),
+        },
+      });
 
     if (error) {
       throw new BadRequestException(error.message);
@@ -239,11 +249,13 @@ export class AuthService {
     };
   }
 
-    /** Current user plus their profile (null until a Google user completes it). */
+  /** Current user plus their profile (null until a Google user completes it). */
   async getMe(user: User) {
     const { data, error } = await this.supabase.admin
       .from('profiles')
-      .select('id, first_name, last_name, email, phone, username')
+      .select(
+        'id, first_name, last_name, email, phone, username, avatar_url, account_type, created_at',
+      )
       .eq('id', user.id)
       .maybeSingle();
 
@@ -254,9 +266,104 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      createdAt: user.created_at,
       profileComplete: !!data,
-      profile: data ?? null,
+      profile: data
+        ? {
+            ...data,
+            created_at: user.created_at,
+          }
+        : null,
     };
+  }
+
+  async updateProfile(user: User, dto: UpdateProfileDto) {
+    const { data: existingProfile, error: profileError } =
+      await this.supabase.admin
+        .from('profiles')
+        .select('id, first_name, last_name, email, phone, username')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (profileError) {
+      throw new InternalServerErrorException('Unable to load your profile.');
+    }
+    if (!existingProfile) {
+      throw new BadRequestException('Complete your profile before editing it.');
+    }
+    const updates: Record<string, string> = {};
+    if (dto.firstName !== undefined) {
+      const firstName = dto.firstName.trim();
+      if (!firstName) {
+        throw new BadRequestException('First name cannot be empty.');
+      }
+      updates.first_name = firstName;
+    }
+    if (dto.lastName !== undefined) {
+      const lastName = dto.lastName.trim();
+      if (!lastName) {
+        throw new BadRequestException('Last name cannot be empty.');
+      }
+      updates.last_name = lastName;
+    }
+    if (dto.username !== undefined) {
+      const username = dto.username.trim().toLowerCase();
+      this.assertUsernameAllowed(username);
+      if (username !== existingProfile.username) {
+        const { count, error } = await this.supabase.admin
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('username', username)
+          .neq('id', user.id);
+        if (error) {
+          throw new InternalServerErrorException(
+            'Unable to check username availability.',
+          );
+        }
+        if (count && count > 0) {
+          throw new ConflictException('That username is already in use.');
+        }
+      }
+      updates.username = username;
+    }
+    if (dto.phone !== undefined) {
+      const phone = dto.phone;
+      if (phone !== existingProfile.phone) {
+        const { count, error } = await this.supabase.admin
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('phone', phone)
+          .neq('id', user.id);
+        if (error) {
+          throw new InternalServerErrorException(
+            'Unable to check phone number availability.',
+          );
+        }
+        if (count && count > 0) {
+          throw new ConflictException('That phone number is already in use.');
+        }
+      }
+      updates.phone = phone;
+    }
+    if (Object.keys(updates).length === 0) {
+      throw new BadRequestException(
+        'Provide at least one profile field to update.',
+      );
+    }
+    const { data, error } = await this.supabase.admin
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id)
+      .select('id, first_name, last_name, email, phone, username')
+      .single();
+    if (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(
+          'The username or phone number is already in use.',
+        );
+      }
+      throw new InternalServerErrorException('Unable to update your profile.');
+    }
+    return { message: 'Profile updated successfully.', profile: data };
   }
 
   /** Creates the profile for an already-authenticated user (e.g. Google sign-in). */
@@ -305,9 +412,9 @@ export class AuthService {
     const value = username.toLocaleLowerCase();
     if (RESERVED_USERNAMES.has(value)) return { available: false };
 
-    const { count, error } =await this.supabase.admin
+    const { count, error } = await this.supabase.admin
       .from('profiles')
-      .select('id', { count: 'exact', head: true})
+      .select('id', { count: 'exact', head: true })
       .eq('username', value);
 
     if (error) {
@@ -337,7 +444,9 @@ export class AuthService {
 
     const isPhone = /^\+?[\d\s-]{7,}$/.test(value);
     const column = isPhone ? 'phone' : 'username';
-    const lookup = isPhone ? String(normalizePhone(value)).replace(/[\s-]/g, '') : value.toLowerCase();
+    const lookup = isPhone
+      ? String(normalizePhone(value)).replace(/[\s-]/g, '')
+      : value.toLowerCase();
 
     const { data } = await this.supabase.admin
       .from('profiles')

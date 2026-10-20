@@ -3,6 +3,7 @@ import { IssueStatus } from './issues.constants';
 export type IssueRow = {
   id: string;
   vehicle_id: string;
+  fleet_id: string | null;
   reported_by: string;
   category: string;
   severity: string;
@@ -30,6 +31,7 @@ export function toIssueResponse(row: IssueRow) {
   return {
     id: row.id,
     vehicleId: row.vehicle_id,
+    fleetId: row.fleet_id,
     reportedBy: row.reported_by,
     category: row.category,
     severity: row.severity,
